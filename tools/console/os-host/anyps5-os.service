@@ -1,0 +1,20 @@
+# systemd --user unit for the AnyPS5 OS console screen.
+# Install: cp anyps5-os.service ~/.config/systemd/user/ && systemctl --user daemon-reload && systemctl --user enable --now anyps5-os
+# Expects the console folder at ~/AnyPS5 Games/_tools/console; change the paths below if it lives elsewhere.
+[Unit]
+Description=AnyPS5 OS console screen (host.py + kiosk browser)
+After=graphical-session-pre.target pipewire.service
+Wants=pipewire.service
+
+[Service]
+Type=simple
+Environment="ANYPS5_GAMES=%h/AnyPS5 Games"
+Environment=ANYPS5_OS_PORT=8790
+ExecStart=/usr/bin/env bash "%h/AnyPS5 Games/_tools/console/os-host/start-anyps5-os.sh"
+Restart=on-failure
+RestartSec=3
+KillMode=mixed
+TimeoutStopSec=10
+
+[Install]
+WantedBy=default.target

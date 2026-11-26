@@ -1,0 +1,3 @@
+- When the screen is black, don't press more buttons. Check whether the video feed works, since long waits and many different inputs can't fix a missing picture. (Scorn, 2026-11-07-0043)
+- Menu and cursor inputs lag, so make one change per turn, read the frame, and check which row is highlighted before pressing CROSS (DOOM, 2026-11-07-0040)
+- If the frame is fully black for several turns and waits and different buttons change nothing, stop sending inputs and treat it as a video feed problem. Also check the frame itself, because the "view changed" status can be wrong. (Scorn, 2026-11-07-0056)

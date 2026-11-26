@@ -1,0 +1,12 @@
+[Unit]
+Description=AnyPS5 thermal governor (keeps the fanless Chromebook below its 105 C shutdown)
+After=multi-user.target
+
+[Service]
+ExecStart=/usr/bin/python3 /usr/local/bin/anyps5-thermal
+Restart=always
+RestartSec=5
+Nice=-5
+
+[Install]
+WantedBy=multi-user.target

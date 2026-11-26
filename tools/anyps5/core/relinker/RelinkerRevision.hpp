@@ -1,0 +1,2 @@
+#pragma once
+#define ANYPS5_RELINKER_REVISION "v0.1.4-499-g16954551ed"

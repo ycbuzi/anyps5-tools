@@ -1,0 +1,13 @@
+[Unit]
+Description=AnyPS5 Azure ARM lane cycle (box64 + lavapipe, ~/alane/bin/lane.sh)
+
+[Service]
+Type=oneshot
+User=blu
+Environment=ALANE=/home/blu/alane
+ExecStart=/bin/bash /home/blu/alane/bin/lane.sh
+Nice=19
+IOSchedulingClass=idle
+CPUWeight=20
+CPUQuota=170%
+TimeoutStartSec=3h

@@ -1,0 +1,15 @@
+# Azure ARM lane (anyps5-arm)
+
+An always-on aarch64 copy of the Quest's lavapipe check. It runs offline, with no Claude in the loop.
+
+- **What runs:** `alane.timer` starts `alane.service` (`~/alane/bin/lane.sh`, nice 19, idle IO, CPUQuota 170%) 5 min after boot, then 5 min after each round ends, around the clock (Blu 11-08: the VMs stay on 24/7). Each round:
+  1. Takes the newest build in `~/alane/incoming/<label>/`. It relinks and runs every game in `~/alane/games/*/game.conf` under box64 v0.4.5 (the Quest's `/opt/box64-git`) with lavapipe (llvmpipe) on its own Xvfb `:7`, for 600 s. Today that is only Celeste Classic (homebrew).
+  2. Runs every test bundle in `~/alane/tests/tests-<sha>/run-tests.sh`. The first run of a bundle is marked `new`, later runs `rerun`.
+  3. Writes `~/alane/results.tsv` (history, trimmed to 4000 lines), `~/alane/results.txt` (latest result per game or bundle, plus the last 10 changes), and `~/alane/logs/` (kept 3 days).
+- **Feeding:** the PC dispatcher (every 30 min, the `# Azure ARM lane` block) checks the Chromebook's newest `~/cb-work/quest-dist/<label>`. When the VM lacks it, the dispatcher runs `~/cb-work/azarm/cb-relink.sh <label>` on the Chromebook, then streams the build plus `<game>.relinked` to the VM. It also copies new `quest-dist/tests/tests-*` bundles (3 per run) and fetches `results.txt` to `D:\AnyPS5 Games\_reports\workers\azarm-lane.txt`.
+- **Why relink on the Chromebook:** the x86-64 relinker segfaults under box64 on this VM, in `std::filesystem::path::has_relative_path` at "Write output". The access lands just past the brk heap. It happens with dynarec off and with `BOX64_RESERVE_HIGH=1`; the Quest (39-bit kernel 4.19) does not hit it. The relinked output is deterministic (the Chromebook and the Quest give the same sha). Without a `.relinked` file, lane.sh tries box64 relinking and records the result.
+- **Run by hand:** `ssh azarm 'sudo systemctl start alane.service; cat ~/alane/results.txt'`. Status: `systemctl list-timers alane.timer`, `cat ~/alane/run/state`.
+- **Add a game:** put `app0/`, `eboot.elf` and `game.conf` (`GAME_NAME`, `EBOOT=$DIR/eboot.elf`, `BINARY`, `RELINK_ARGS`) in `~/alane/games/<game>/` on the VM. Put the same `eboot.elf` and `game.conf` in the Chromebook's `~/cb-work/azarm/games/<game>/`. RAM is 944 MB plus 2 GB swap, so small games only.
+- **Deploy script changes:** `scp run-game.sh lane.sh classify.sh azarm:alane/bin/`, then `sed -i 's/\r$//'` on them. For the units: `alane.service` and `alane.timer` go in `/etc/systemd/system/`, then `daemon-reload`. `cb-relink.sh` goes to `chromebook:cb-work/azarm/`.
+- **Leave alone:** the VNC desktop (TigerVNC `:1`, XFCE). The lane uses its own Xvfb `:7`, and the `tests/` bundles' `.tested` markers (delete one to rerun it).
+- **Credits:** B2pts_v2 is a burstable size. Back-to-back rounds use up CPU credits, after which Azure holds the VM at its baseline speed. Rounds then take longer and VNC gets slower. If that bothers Blu, lengthen `OnUnitInactiveSec` in `alane.timer`.

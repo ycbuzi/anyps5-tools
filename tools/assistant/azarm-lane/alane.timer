@@ -1,0 +1,10 @@
+[Unit]
+Description=Run the AnyPS5 Azure ARM lane back to back (5 min pause between rounds)
+
+[Timer]
+OnBootSec=5min
+OnUnitInactiveSec=5min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
